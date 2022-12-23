@@ -1,180 +1,255 @@
 import 'package:firebase_login/config/thems.dart';
+import 'package:firebase_login/state/authState.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+
+import '../utils/custom.dart';
+import '../utils/utilsfunction.dart';
 
 class LoginPage extends HookConsumerWidget {
   const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final GlobalKey<FormState> formKey =
+        useMemoized(() => GlobalKey<FormState>());
     final appThemeW = ref.watch(apptheme);
     final height = MediaQuery.of(context).size.height;
     final topPadding = MediaQuery.of(context).viewPadding.top;
+    TextEditingController email = useTextEditingController();
+    TextEditingController password = useTextEditingController();
+    TextEditingController reset = useTextEditingController();
+    ValueNotifier<bool> isLoading = useState(false);
+    ValueNotifier<bool> isShowPass = useState(false);
 
     return Scaffold(
       // resizeToAvoidBottomInset: false,
       backgroundColor: appThemeW.backgroundColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: SizedBox(
-            height: height - topPadding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Image.asset("assets/images/login.png"),
-                const Spacer(),
-                const Padding(
-                  padding: EdgeInsets.only(left: 20),
-                  child: Text(
-                    "Login",
-                    textScaleFactor: 1,
-                    style: TextStyle(
-                      fontSize: 30,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.only(left: 20),
-                  child: Text(
-                    "Please signin to continue.",
-                    textScaleFactor: 1,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: TextFormField(
-                      decoration: const InputDecoration(
-                        filled: true,
-                        prefixIcon: Icon(
-                          Icons.mail_outline,
-                          color: Colors.white,
-                        ),
-                        fillColor: Color(0xff3c2d4a),
-                        errorBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        disabledBorder: InputBorder.none,
-                        focusedErrorBorder: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: TextFormField(
-                      decoration: const InputDecoration(
-                        filled: true,
-                        fillColor: Color(0xff3c2d4a),
-                        prefixIcon: Icon(
-                          Icons.key_outlined,
-                          color: Colors.white,
-                        ),
-                        errorBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        disabledBorder: InputBorder.none,
-                        focusedErrorBorder: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: SizedBox(
-                      width: 200,
-                      height: 50,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: appThemeW.primaryColor,
-                            shape: const StadiumBorder()),
-                        onPressed: () {},
-                        child: const Text(
-                          "Login",
-                          textScaleFactor: 1,
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
+      body: isLoading.value
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: Colors.white,
+              ),
+            )
+          : SafeArea(
+              child: SingleChildScrollView(
+                child: SizedBox(
+                  height: height - topPadding,
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Image.asset("assets/images/login.png"),
+                        const Spacer(),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 20),
+                          child: Text(
+                            "Login",
+                            textScaleFactor: 1,
+                            style: TextStyle(
+                              fontSize: 30,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                      ),
+                        const Padding(
+                          padding: EdgeInsets.only(left: 20),
+                          child: Text(
+                            "Please signin to continue.",
+                            textScaleFactor: 1,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: TextFormField(
+                              controller: email,
+                              validator: (value) {
+                                if (value == null ||
+                                    value == "" ||
+                                    value.isEmpty) {
+                                  return "Enter the email address";
+                                } else if (!RegExp(
+                                        r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
+                                    .hasMatch(value)) {
+                                  return "Your email is not valid, Try again...";
+                                } else if (value.contains(" ")) {
+                                  return "Email connot containes space";
+                                }
+                                return null;
+                              },
+                              style: const TextStyle(color: Colors.white),
+                              decoration: const InputDecoration(
+                                filled: true,
+                                prefixIcon: Icon(
+                                  Icons.mail_outline,
+                                  color: Colors.white,
+                                ),
+                                fillColor: Color(0xff3c2d4a),
+                                errorBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: TextFormField(
+                              controller: password,
+                              obscureText: !isShowPass.value,
+                              validator: (value) {
+                                if (value == null ||
+                                    value == "" ||
+                                    value.isEmpty) {
+                                  return "Enter the password";
+                                } else if (value.contains(" ")) {
+                                  return "Email connot containes space";
+                                } else if (!validatePassword(value)) {
+                                  return "Enter a valid password";
+                                }
+                                return null;
+                              },
+                              style: const TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                suffixIcon: InkWell(
+                                  onTap: () {
+                                    isShowPass.value = !isShowPass.value;
+                                  },
+                                  child: Icon(
+                                    isShowPass.value
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: const Color(0xff3c2d4a),
+                                prefixIcon: const Icon(
+                                  Icons.key_outlined,
+                                  color: Colors.white,
+                                ),
+                                errorBorder: InputBorder.none,
+                                focusedBorder: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                disabledBorder: InputBorder.none,
+                                focusedErrorBorder: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: SizedBox(
+                              width: 200,
+                              height: 50,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: appThemeW.primaryColor,
+                                    shape: const StadiumBorder()),
+                                onPressed: () async {
+                                  isLoading.value = true;
+                                  if (formKey.currentState!.validate()) {
+                                    await ref.watch(appAuthState).login(
+                                        context, email.text, password.text);
+                                  }
+                                  isLoading.value = false;
+                                },
+                                child: const Text(
+                                  "Login",
+                                  textScaleFactor: 1,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 20),
+                          child: InkWell(
+                            onTap: () {
+                              resetPassAlert(context, reset, ref);
+                            },
+                            child: Center(
+                              child: Text(
+                                "forget password",
+                                textScaleFactor: 1,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: appThemeW.primaryColor,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            const Text(
+                              "Don't have an account?",
+                              textScaleFactor: 1,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            InkWell(
+                              onTap: () {
+                                return context.push("/signup");
+                              },
+                              child: Text(
+                                "Sign up",
+                                textScaleFactor: 1,
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    color: appThemeW.primaryColor,
+                                    fontWeight: FontWeight.w500),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        )
+                      ],
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 20),
-                  child: Center(
-                    child: Text(
-                      "forget password",
-                      textScaleFactor: 1,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: appThemeW.primaryColor,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    const Text(
-                      "Don't have an account?",
-                      textScaleFactor: 1,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    InkWell(
-                      onTap: () {
-                        return context.push("/signup");
-                      },
-                      child: Text(
-                        "Sign up",
-                        textScaleFactor: 1,
-                        style: TextStyle(
-                            fontSize: 14,
-                            color: appThemeW.primaryColor,
-                            fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 20,
-                )
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
     );
   }
 }
