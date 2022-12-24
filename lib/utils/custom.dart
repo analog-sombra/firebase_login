@@ -7,7 +7,6 @@ import 'package:firebase_login/state/authState.dart';
 import 'package:firebase_login/utils/utilsfunction.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 void alert(BuildContext context, Color backgroundColor, String title) {
@@ -161,7 +160,7 @@ void resetPassAlert(
                             await ref
                                 .watch(appAuthState)
                                 .resetPassword(context, email.text);
-                            context.pop();
+                            Navigator.pop(context);
 
                             email.clear();
                           }
@@ -218,8 +217,6 @@ void updatePassAlert(
                       validator: (value) {
                         if (value == null || value.isEmpty || value == "") {
                           return 'Please enter email address';
-                        } else if (value.contains(" ")) {
-                          return "Email connot containes space";
                         } else if (!validatePassword(value)) {
                           return "Enter a valid password";
                         }
@@ -268,8 +265,8 @@ void updatePassAlert(
                           if (formKey.currentState!.validate()) {
                             await ref
                                 .watch(appAuthState)
-                                .updatePassword(context, email.text);
-                            context.pop();
+                                .updatePassword(context, email.text.trim());
+                            Navigator.pop(context);
 
                             email.clear();
                           }

@@ -1,6 +1,5 @@
 import 'package:firebase_login/config/thems.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 class ErrorPage extends HookConsumerWidget {
@@ -17,7 +16,7 @@ class ErrorPage extends HookConsumerWidget {
         backgroundColor: Colors.transparent,
         leading: IconButton(
           onPressed: () {
-            context.pop();
+            Navigator.pop(context);
           },
           icon: const Icon(
             Icons.arrow_back,

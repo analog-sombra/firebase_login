@@ -1,12 +1,16 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:developer';
+
 import 'package:firebase_login/config/thems.dart';
 import 'package:firebase_login/state/authState.dart';
+import 'package:firebase_login/views/signup.dart';
+import 'package:firebase_login/views/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../utils/custom.dart';
-import '../utils/utilsfunction.dart';
 
 class LoginPage extends HookConsumerWidget {
   const LoginPage({super.key});
@@ -23,6 +27,20 @@ class LoginPage extends HookConsumerWidget {
     TextEditingController reset = useTextEditingController();
     ValueNotifier<bool> isLoading = useState(false);
     ValueNotifier<bool> isShowPass = useState(false);
+    void init() async {
+      bool login = await ref.watch(appAuthState).getLogin(context);
+      if (login) {
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const UserPage()),
+            (route) => false);
+      }
+    }
+
+    useEffect(() {
+      init();
+      return null;
+    });
 
     return Scaffold(
       // resizeToAvoidBottomInset: false,
@@ -87,8 +105,6 @@ class LoginPage extends HookConsumerWidget {
                                         r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,253}[a-zA-Z0-9])?)*$")
                                     .hasMatch(value)) {
                                   return "Your email is not valid, Try again...";
-                                } else if (value.contains(" ")) {
-                                  return "Email connot containes space";
                                 }
                                 return null;
                               },
@@ -124,10 +140,6 @@ class LoginPage extends HookConsumerWidget {
                                     value == "" ||
                                     value.isEmpty) {
                                   return "Enter the password";
-                                } else if (value.contains(" ")) {
-                                  return "Email connot containes space";
-                                } else if (!validatePassword(value)) {
-                                  return "Enter a valid password";
                                 }
                                 return null;
                               },
@@ -172,8 +184,14 @@ class LoginPage extends HookConsumerWidget {
                                 onPressed: () async {
                                   isLoading.value = true;
                                   if (formKey.currentState!.validate()) {
-                                    await ref.watch(appAuthState).login(
-                                        context, email.text, password.text);
+                                    try {
+                                      await ref.watch(appAuthState).login(
+                                          context,
+                                          email.text.trim(),
+                                          password.text.trim());
+                                    } catch (e) {
+                                      log(e.toString());
+                                    }
                                   }
                                   isLoading.value = false;
                                 },
@@ -228,7 +246,12 @@ class LoginPage extends HookConsumerWidget {
                             ),
                             InkWell(
                               onTap: () {
-                                return context.push("/signup");
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const SignupPage(),
+                                  ),
+                                );
                               },
                               child: Text(
                                 "Sign up",

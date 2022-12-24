@@ -3,9 +3,11 @@
 import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_login/services/sharedpref.dart';
 import 'package:firebase_login/utils/custom.dart';
+import 'package:firebase_login/views/login.dart';
+import 'package:firebase_login/views/user.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 final appAuthState =
@@ -20,7 +22,7 @@ class AppAuthState extends ChangeNotifier {
           .createUserWithEmailAndPassword(email: email, password: password);
       log(userCredential.toString());
       alert(context, Colors.green, "Registered sucessfully. Logged In.");
-      context.go("/");
+      Navigator.pop(context);
     } on FirebaseException catch (e) {
       if (e.code == "weak-password") {
         alert(context, Colors.red, "Password provided is too weak.");
@@ -37,23 +39,31 @@ class AppAuthState extends ChangeNotifier {
   Future<void> login(
       BuildContext context, String email, String password) async {
     try {
-      UserCredential userCredential = await appAuth.signInWithEmailAndPassword(
+      await appAuth.signInWithEmailAndPassword(
           email: email, password: password);
-      log(userCredential.toString());
       alert(context, Colors.green, "Login sucessfully.");
-      context.go("/user");
+      await setLogin(context, true);
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => const UserPage()));
+      Navigator.pop(context);
     } on FirebaseException catch (e) {
       if (e.code == 'user-not-found') {
         alert(context, Colors.red, "User not found for this $email");
       } else if (e.code == 'wrong-password') {
         alert(context, Colors.red, "Wrong password. Try again");
+      } else if (e.code == "invalid-email") {
+        alert(context, Colors.red, "Enter a valid email");
       }
     }
   }
 
   Future<void> signOut(BuildContext context) async {
     await appAuth.signOut();
-    context.go("/");
+    await setLogin(context, false);
+    Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+        (route) => false);
   }
 
   Future<void> resetPassword(BuildContext context, String email) async {
@@ -74,15 +84,32 @@ class AppAuthState extends ChangeNotifier {
 
   Future<void> updatePassword(BuildContext context, String newPassword) async {
     try {
-      final currentUser =
-          await appAuth.currentUser!.updatePassword(newPassword);
+      await appAuth.currentUser!.updatePassword(newPassword);
       await signOut(context);
       alert(context, Colors.green, "Reset email has been sent");
-      context.go("/");
+      Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+          (route) => false);
     } on FirebaseException catch (e) {
       if (e.code == "user-no-found") {
         alert(context, Colors.red, "Unable to set new password.");
       }
+    }
+  }
+
+  Future<void> setLogin(BuildContext context, bool value) async {
+    await sharedPref.setBool("login", value);
+  }
+
+  Future<bool> getLogin(BuildContext context) async {
+    bool? login = sharedPref.getBool("login");
+    if (login == null) {
+      return false;
+    } else if (login == false) {
+      return false;
+    } else {
+      return true;
     }
   }
 }

@@ -84,7 +84,7 @@ class UserPage extends HookConsumerWidget {
                             await ref.watch(appAuthState).signOut(context);
                           },
                           child: const Text(
-                            "Logouts",
+                            "Logout",
                             textScaleFactor: 1,
                             style: TextStyle(
                               fontSize: 18,

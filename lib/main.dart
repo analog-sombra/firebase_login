@@ -1,4 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_login/services/sharedpref.dart';
+import 'package:firebase_login/views/login.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -8,6 +10,7 @@ import 'services/firebase.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await sharedPrefInit();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -21,16 +24,13 @@ class MyApp extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final firebaseAppW = ref.watch(firebaseApp);
     return firebaseAppW.when(
-      data: (data) => MaterialApp.router(
+      data: (data) => MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Login system',
+        home: const LoginPage(),
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        // routerConfig: AppRouter().router.routeConfiguration,
-        // routeInformationParser: AppRouter().router.routeInformationParser,
-        // routerDelegate: AppRouter().router.routerDelegate,
-        // routeInformationProvider: AppRouter().router.routeInformationProvider,
       ),
       error: (err, stack) => Center(
         child: Center(
