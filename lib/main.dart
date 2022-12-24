@@ -1,5 +1,4 @@
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_login/config/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -28,7 +27,10 @@ class MyApp extends HookConsumerWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        routerConfig: router,
+        // routerConfig: AppRouter().router.routeConfiguration,
+        // routeInformationParser: AppRouter().router.routeInformationParser,
+        // routerDelegate: AppRouter().router.routerDelegate,
+        // routeInformationProvider: AppRouter().router.routeInformationProvider,
       ),
       error: (err, stack) => Center(
         child: Center(
